@@ -13,24 +13,32 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 
 # hypergraph parameters
-hypergraph_name = "hedge_size_2_10"
-export_folder = '../resources/'
+hypergraph_name = "test"
+export_folder = './'
 num_vertices = 100000
 num_hyperedges = 100000
 num_clusters = 12
 cluster_density = [1.0/num_clusters for _ in range(num_clusters)]       # probability that a vertex belongs to each cluster
 #cluster_density = [0.05,0.05,0.05,0.05,0.05,0.05,0.1,0.05,0.20,0.25,0.05,0.05]
 p_intraconnectivity = 1.0
-hyperedge_gamma = 1.8                             # determines the skewness of the distribution (higher values more skewed to the left). Must be >= 0 (gamma == 0 is the uniform distribution)
-max_hyperedge_degree = 100
-min_hyperedge_degree = 10
+hyperedge_gamma = 1.5                            # determines the skewness of the distribution (higher values more skewed to the left). Must be >= 0 (gamma == 0 is the uniform distribution)
+max_hyperedge_degree = 20
+min_hyperedge_degree = 5
 vertex_degree_power_law = False          # whether drawing vertex ids is done using power law distribution (much slower)
-vertex_gamma = 1.5                     # careful! high values of this may prevent the graph from finishing (since vertices cannot be added twice to the same hyperedge, the roll will be rolled and may always get the same most probable answers)
-show_distribution = True
+vertex_gamma = 1.0                     # careful! high values of this may prevent the graph from finishing (since vertices cannot be added twice to the same hyperedge, the roll will be rolled and may always get the same most probable answers)
+show_distribution = False
 store_clustering = True
 
-
 hypergraph_name = hypergraph_name + ".hgr"
+
+
+# sanity check to test that desired cluster sizes are large enough for desired hyperedge degrees
+for i,r in enumerate(cluster_density):
+        cluster_size = num_vertices * r
+        if cluster_size < max_hyperedge_degree:
+                print("Cluster size is not large enough. Cluster {} size is {}, but max hyperedge degree is {}.".format(i,cluster_size,max_hyperedge_degree))
+                exit()
+
 
 #power law distributions
 def truncated_power_law(a, m):
@@ -40,7 +48,7 @@ def truncated_power_law(a, m):
     return stats.rv_discrete(values=(range(1, m+1), pmf))
 
 # will sample from 1 to max_hyperedge_degree with probability power law degree
-distribution = truncated_power_law(a=hyperedge_gamma, m=max_hyperedge_degree)
+distribution = truncated_power_law(a=hyperedge_gamma, m=(max_hyperedge_degree-min_hyperedge_degree+1))
 #sample = distribution.rvs(size=num_hyperedges)
 #plt.hist(sample, bins=np.arange(max_hyperedge_degree)+0.5)
 #plt.show()
@@ -88,8 +96,9 @@ with open(export_folder + hypergraph_name,"w+") as f:
         f.write("{} {}\n".format(num_hyperedges,num_vertices))
         # draw hedge degree from power law distribution (with specific min value)
         hyperedge_degrees = (distribution.rvs(size=num_hyperedges)) + min_hyperedge_degree-1
-                
+
         for he_id in range(num_hyperedges):
+                print(he_id)
                 # draw vertices ids randomly
                 # needs to account for premade clusters
                 # choose a cluster based on cluster density
