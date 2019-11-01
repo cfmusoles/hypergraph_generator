@@ -7,15 +7,15 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.cluster import adjusted_rand_score, adjusted_mutual_info_score
 
-data_folder = '../hyperPraw/results/parallel streaming/'
-ground_truth_cluster = 'small_dense_uniform.hgr_clustering'
+data_folder = '../hyperPraw/results/smoke/'
+ground_truth_cluster = 'small_dense_powerlaw.hgr_clustering'
 num_clusters = 96
-experiment_prefix = 'stream_parallelVertex_3_1'
-hgraph = 'small_dense_uniform.hgr'
+experiment_prefix = 'smoke_staggered_parallelVertex_6'
+hgraph = 'small_dense_powerlaw.hgr'
 partitioning_candidates = ['parallelVertex']
 plotPartitionShare = True
-expected_boundaries = 3
-storePlot = False
+expected_boundaries = 1
+storePlot = True
 image_format = "pdf"
 
 # load ground truth
@@ -83,18 +83,19 @@ for partition in partitioning_candidates:
         plt.show()  
 
         #plot highest cluster ratio in partition for all partitions
-        #plot highest value (number of elements) with colours depending on high ratio (maximo % de pertenencia a un cluster)
-        
-        #ratios_df = pd.DataFrame(highest_ratio,index=range(num_clusters))
-        #ratios_df.plot.bar(legend=True,width=0.8,align='center')
-        ratios_df = pd.DataFrame({'Elements' : highest_value, 'Ratio' : highest_ratio,'Partitions' : range(num_clusters)})
-        ax = sns.barplot(x='Partitions',y='Elements',data=ratios_df)
-        ax.legend().set_visible(False)
+        #plot highest value (number of elements) with colour, rest in grey for each partition
+        most_popular_cluster = [highest_value[i] * highest_ratio[i]/100 for i in range(len(highest_value))]
+        rest_cluster = [highest_value[i] - most_popular_cluster[i] for i in range(len(highest_value))]
+        ratios_df = pd.DataFrame({'Popular' : most_popular_cluster, 'Rest' : rest_cluster},index=range(num_clusters))
+
+        ax = ratios_df.plot.bar(stacked=True,color=['red','grey'],legend=False,width=1)
 
         # draw expected boundaries (lines on the start of streams)
         for i in range(expected_boundaries):
-            plt.plot(0,[i*num_clusters/expected_boundaries],[max(highest_value),i*num_clusters/expected_boundaries], linewidth=2)
+            plt.plot([i*num_clusters/expected_boundaries,i*num_clusters/expected_boundaries],[0,max(highest_value)*1.1], linewidth=3,color='black')
 
+        if storePlot:
+            plt.savefig("parts." + image_format,format=image_format,dpi=1000)  
         plt.show()
         
 
