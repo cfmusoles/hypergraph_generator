@@ -11,25 +11,30 @@
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
+import itertools
+import math
+from random import shuffle
+import shutil
+import os
 
 # hypergraph parameters
-hypergraph_name = "graph"
+hypergraph_name = "small_uniform_dense_c192.hgr"
 export_folder = './'
-num_vertices = 10000
-num_hyperedges = 500000
-num_clusters = 12
+num_vertices = 200000
+num_hyperedges = 50000
+num_clusters = 192
 cluster_density = [1.0/num_clusters for _ in range(num_clusters)]       # probability that a vertex belongs to each cluster
 #cluster_density = [0.05,0.05,0.05,0.05,0.05,0.05,0.1,0.05,0.20,0.25,0.05,0.05]
-p_intraconnectivity = 1.0
+p_intraconnectivity = 0.99
 hyperedge_gamma = 1.5                            # determines the skewness of the distribution (higher values more skewed to the left). Must be >= 0 (gamma == 0 is the uniform distribution)
-max_hyperedge_degree = 2
-min_hyperedge_degree = 2
-vertex_degree_power_law = True          # whether drawing vertex ids is done using power law distribution (much slower)
+min_hyperedge_degree = 50
+max_hyperedge_degree = 200
+vertex_degree_power_law = False          # whether drawing vertex ids is done using power law distribution (much slower)
 vertex_gamma = 1.0                     # careful! high values of this may prevent the graph from finishing (since vertices cannot be added twice to the same hyperedge, the roll will be rolled and may always get the same most probable answers)
+ensure_no_missing_vertices = True       # ensure that all vertex ids are present in at least one hedge
 show_distribution = False
 store_clustering = True
 
-hypergraph_name = hypergraph_name + ".hgr"
 
 
 # sanity check to test that desired cluster sizes are large enough for desired hyperedge degrees
@@ -90,6 +95,7 @@ if vertex_degree_power_law:
 
 # build hypergraph one hyperedge at a time
 hypergraph = []
+used_vertices = set()
 print("Generating {} hyperedges".format(num_hyperedges))
 with open(export_folder + hypergraph_name,"w+") as f:
         # write header (NUM_HYPEREDGES NUM_VERTICES)
@@ -123,12 +129,17 @@ with open(export_folder + hypergraph_name,"w+") as f:
                                         vertex = clusters[c][rand_index]
                                 # ensure the same vertex is not added twice to a hyperedge
                                 if vertex not in vertices:
+                                        vertices.add(vertex)
                                         break
-                        vertices.add(vertex) 
+                                # prevent stalling if all vertices have been collected from cluster
+                                if len(vertices) >= len(clusters[c]):
+                                        break
+                         
                 
                 #write hyperedge to file
-                vertices = list(vertices)
-                vertices = [str(v+1) for v in sorted(vertices)]
+                vertices = [v+1 for v in sorted(list(vertices))]
+                used_vertices.update(vertices)
+                vertices = [str(v) for v in vertices]
                 f.write(" ".join(vertices))
                 f.write("\n")
                 
@@ -140,7 +151,34 @@ if show_distribution:
         plt.hist(hypergraph, bins=np.arange(max_hyperedge_degree+1)+0.5)
         plt.show()
 
+if ensure_no_missing_vertices:
+        # add missing vertices to new hypergraphs
+        # use max cardinality to create as fewer hedges as possible
+        missing_verts = []
+        for v in range(1,num_vertices+1):
+                if v not in used_vertices:
+                        missing_verts.append(v)
+        shuffle(missing_verts)
+        extra_hedges = math.ceil(len(missing_verts) / max_hyperedge_degree)
+        print("{} extra hyperedges created to include {} missing vertices".format(extra_hedges,len(missing_verts)))
+        with open(export_folder + hypergraph_name,"r") as read_stream:
+                with open(export_folder + 'temp.hgr',"w+") as write_stream:
+                        # update header
+                        header = [int(val) for val in read_stream.readline().split(' ')]
+                        header[1] += extra_hedges
+                        write_stream.write("{} {}\n".format(num_hyperedges + extra_hedges, num_vertices))
+                        # add extra hedges first
+                        while len(missing_verts) > 0:
+                                new_hedge = sorted(list(itertools.islice(missing_verts,min(max_hyperedge_degree,len(missing_verts)))))
+                                for vert in new_hedge:
+                                        write_stream.write("{} ".format(vert))
+                                        missing_verts.remove(vert)
+                                write_stream.write('\n')
+                        # add remainder hedges
+                        write_stream.writelines(read_stream.readlines())
+        # swap temp file for final file
+        os.unlink(export_folder + hypergraph_name)
+        shutil.move(export_folder + 'temp.hgr',export_folder + hypergraph_name)
 
 
-
-
+                        
