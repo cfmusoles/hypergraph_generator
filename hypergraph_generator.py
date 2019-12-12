@@ -18,17 +18,17 @@ import shutil
 import os
 
 # hypergraph parameters
-hypergraph_name = "small_uniform_dense_c192.hgr"
+hypergraph_name = "huge_uniform_dense_c96.hgr"
 export_folder = './'
-num_vertices = 200000
-num_hyperedges = 50000
-num_clusters = 192
+num_vertices = 1000000
+num_hyperedges = 1700000
+num_clusters = 96
 cluster_density = [1.0/num_clusters for _ in range(num_clusters)]       # probability that a vertex belongs to each cluster
 #cluster_density = [0.05,0.05,0.05,0.05,0.05,0.05,0.1,0.05,0.20,0.25,0.05,0.05]
 p_intraconnectivity = 0.99
 hyperedge_gamma = 1.5                            # determines the skewness of the distribution (higher values more skewed to the left). Must be >= 0 (gamma == 0 is the uniform distribution)
-min_hyperedge_degree = 50
-max_hyperedge_degree = 200
+min_hyperedge_degree = 10
+max_hyperedge_degree = 100
 vertex_degree_power_law = False          # whether drawing vertex ids is done using power law distribution (much slower)
 vertex_gamma = 1.0                     # careful! high values of this may prevent the graph from finishing (since vertices cannot be added twice to the same hyperedge, the roll will be rolled and may always get the same most probable answers)
 ensure_no_missing_vertices = True       # ensure that all vertex ids are present in at least one hedge
