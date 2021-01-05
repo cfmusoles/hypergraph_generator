@@ -6,10 +6,11 @@
 from random import shuffle
 
 folder = './'
-original_hgraphs = ["large_powerlaw_sparse_c96.hgr", "small_powerlaw_dense_c96.hgr",
-                    "large_uniform_sparse_c96.hgr", "small_uniform_dense_c96.hgr",
-                    "small_uniform_sparse_c96.hgr", "small_uniform_sparse_c48.hgr",
-                    "small_uniform_dense_c192.hgr"]
+original_hgraphs = ["symmetric_large.hgr"]#, "small_powerlaw_dense_c96.hgr",
+                    #"large_uniform_sparse_c96.hgr", "small_uniform_dense_c96.hgr",
+                    #"small_uniform_sparse_c96.hgr", "small_uniform_sparse_c48.hgr",
+                    #"small_uniform_dense_c192.hgr",
+                    #"huge_uniform_packed_c192.hgr"]
 shuffle_data = False
 
 

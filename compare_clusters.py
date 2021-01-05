@@ -12,12 +12,12 @@ from sklearn.metrics.cluster import adjusted_rand_score, adjusted_mutual_info_sc
 # large_sparse_uniform.hgr
 # large_sparse_powerlaw.hgr
 
-data_folder = '../hyperPraw/results/refine/'
-ground_truth_cluster = 'small_dense_powerlaw.hgr_clustering'
-num_clusters = 96
-experiment_prefixes = ['refine_hyperPraw_bandwidth_1','refine_staggered_overlap_lambda10_w1_parallelVertex_1']#'refine_staggered_overlap_lambda10_w1_parallelVertex_1'
-hgraph = 'small_dense_powerlaw.hgr'
-partitioning_candidates = ['hyperPrawVertex','parallelVertex']
+data_folder = './'
+ground_truth_cluster = 'p_conn_0.85.hgr_clustering'
+num_clusters = 12
+experiment_prefixes = ['p_conn']#'refine_staggered_overlap_lambda10_w1_parallelVertex_1'
+hgraph = 'p_conn_0.85.hgr'
+partitioning_candidates = ['zoltanVertex']
 plotPartitionShare = True
 expected_boundaries = 0
 storePlot = True
@@ -99,12 +99,17 @@ for i, experiment_prefix in enumerate(experiment_prefixes):
 
             ax = ratios_df.plot.bar(stacked=True,color=['red','grey'],legend=False,width=1)
 
+            # labels
+            ax.set_xlabel("Partition")
+            ax.set_ylabel("Number of elements")
+            plt.xticks([], [])
+
             # draw expected boundaries (lines on the start of streams)
             for i in range(expected_boundaries):
                 plt.plot([i*num_clusters/expected_boundaries,i*num_clusters/expected_boundaries],[0,max(highest_value)*1.1], linewidth=2,color='black')
 
             if storePlot:
-                plt.savefig("binary " + experiment_prefix + "."+ image_format,format=image_format,dpi=1000)  
+                plt.savefig(experiment_prefix + "_workload_cluster_recoverability" + "."+ image_format,format=image_format,dpi=1000)  
             plt.show()
         
 
